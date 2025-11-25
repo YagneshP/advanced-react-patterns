@@ -74,12 +74,16 @@ function useUser() {
 }
 
 // 🐨 add a function here called `updateUser`
-const updateUser = ({dispatch, user, updates}) => {
+const updateUser = async ({dispatch, user, updates}) => {
   dispatch({type: 'start update', updates})
-  return userClient.updateUser(user, updates).then(
-    updatedUser => dispatch({type: 'finish update', updatedUser}),
-    error => dispatch({type: 'fail update', error}),
-  )
+  try {
+    const updatedUser = await userClient.updateUser(user, updates)
+    dispatch({type: 'finish update', updatedUser})
+    return updateUser
+  } catch (error) {
+    dispatch({type: 'fail update', error})
+    throw error
+  }
 }
 
 // export {UserProvider, useUser, updateUser}
@@ -103,7 +107,6 @@ function UserSettings() {
   function handleSubmit(event) {
     event.preventDefault()
     updateUser({dispatch: userDispatch, user, updates: formState})
-    // 🐨 move the following logic to the `updateUser` function you create above
   }
 
   return (

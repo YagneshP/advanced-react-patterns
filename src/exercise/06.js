@@ -41,6 +41,27 @@ function useToggle({
   let onIsControlled = controlledOn != null
 
   const on = onIsControlled ? controlledOn : state.on
+  const {current: prevOnIsControlled} = React.useRef(onIsControlled)
+
+  React.useEffect(() => {
+    warning(
+      !(prevOnIsControlled && !onIsControlled),
+      'Warning: A component is changing an uncontrolled Toggle to be controlled. ' +
+        'This is likely caused by the `on` prop changing from `undefined` to a ' +
+        'defined value. Decide between using a controlled or uncontrolled Toggle ' +
+        'element for the lifetime of the component. ' +
+        'More info: https://reactjs.org/link/controlled-components',
+    )
+
+    warning(
+      !(!prevOnIsControlled && onIsControlled),
+      'Warning: A component is changing a controlled Toggle to be uncontrolled. ' +
+        'This is likely caused by the `on` prop changing from a defined value to ' +
+        '`undefined`. Decide between using a controlled or uncontrolled Toggle ' +
+        'element for the lifetime of the component. ' +
+        'More info: https://reactjs.org/link/controlled-components',
+    )
+  }, [onIsControlled, prevOnIsControlled])
 
   const hasOnChange = Boolean(onChange)
 
@@ -100,7 +121,7 @@ function Toggle({on: controlledOn, onChange, initialOn, reducer, readOnly}) {
 }
 
 function App() {
-  const [bothOn, setBothOn] = React.useState(false)
+  const [bothOn, setBothOn] = React.useState()
   const [timesClicked, setTimesClicked] = React.useState(0)
 
   function handleToggleChange(state, action) {
@@ -119,7 +140,7 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} readOnly={false} />
+        <Toggle on={bothOn} onChange={handleToggleChange} />
         <Toggle on={bothOn} onChange={handleToggleChange} />
       </div>
       {timesClicked > 4 ? (

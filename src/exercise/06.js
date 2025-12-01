@@ -3,6 +3,7 @@
 
 import * as React from 'react'
 import {Switch} from '../switch'
+import warning from 'warning'
 
 const callAll =
   (...fns) =>
@@ -33,6 +34,7 @@ function useToggle({
   reducer = toggleReducer,
   onChange,
   on: controlledOn,
+  readOnly = false,
 } = {}) {
   const {current: initialState} = React.useRef({on: initialOn})
   const [state, dispatch] = React.useReducer(reducer, initialState)
@@ -40,6 +42,14 @@ function useToggle({
 
   const on = onIsControlled ? controlledOn : state.on
 
+  const hasOnChange = Boolean(onChange)
+
+  React.useEffect(() => {
+    warning(
+      !(onIsControlled && !hasOnChange && !readOnly),
+      'You provided an `on` prop to a Toggle without an `onChange` handler. This will render a read-only toggle. If the toggle should be mutable, use `initialOn`. Otherwise, provide an `onChange` handler.',
+    )
+  }, [onIsControlled, hasOnChange, readOnly])
   function dispatchWithOnChange(action) {
     if (!onIsControlled) {
       dispatch(action)
@@ -77,12 +87,13 @@ function useToggle({
   }
 }
 
-function Toggle({on: controlledOn, onChange, initialOn, reducer}) {
+function Toggle({on: controlledOn, onChange, initialOn, reducer, readOnly}) {
   const {on, getTogglerProps} = useToggle({
     on: controlledOn,
     onChange,
     initialOn,
     reducer,
+    readOnly,
   })
   const props = getTogglerProps({on})
   return <Switch {...props} />
@@ -108,7 +119,7 @@ function App() {
   return (
     <div>
       <div>
-        <Toggle on={bothOn} onChange={handleToggleChange} />
+        <Toggle on={bothOn} readOnly={false} />
         <Toggle on={bothOn} onChange={handleToggleChange} />
       </div>
       {timesClicked > 4 ? (
